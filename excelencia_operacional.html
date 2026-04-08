@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excelencia Operacional</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --surface: #f8f8f6;
+    --border: #e8e8e4;
+    --text: #1a1a18;
+    --text-muted: #8a8a84;
+    --accent-x: #2563eb;
+    --accent-y: #059669;
+    --accent-z: #d97706;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  header p {
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 40px;
+    width: 100%;
+    max-width: 920px;
+    align-items: start;
+  }
+
+  /* ── Panel ── */
+  .controls { display: flex; flex-direction: column; gap: 6px; }
+
+  .ctrl-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .ctrl-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    transition: border-color 0.2s;
+  }
+  .ctrl-item:hover { border-color: #c8c8c2; }
+
+  .ctrl-name { font-size: 0.82rem; font-weight: 500; }
+  .ctrl-sub  { font-size: 0.68rem; color: var(--text-muted); margin-top: 1px; }
+
+  .ctrl-spinner { display: flex; align-items: center; gap: 8px; }
+
+  .ctrl-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    min-width: 22px;
+    text-align: center;
+    line-height: 1;
+  }
+  .vx { color: var(--accent-x); }
+  .vy { color: var(--accent-y); }
+  .vz { color: var(--accent-z); }
+
+  .btn-spin {
+    width: 26px; height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; line-height: 1;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .btn-spin:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn-spin:active { transform: scale(0.9); }
+
+  .nivel-box {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .nivel-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    color: var(--text);
+    line-height: 1;
+  }
+  .nivel-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--text);
+    color: var(--bg);
+    transition: background 0.3s;
+  }
+  .nivel-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  .axis-legend {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .ax-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.72rem; color: var(--text-muted);
+  }
+  .ax-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  canvas { width: 100%; height: auto; display: block; }
+
+  @media (max-width: 640px) {
+    .layout { grid-template-columns: 1fr; gap: 24px; }
+    canvas { order: -1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Excelencia Operacional</h1>
+  <p>Sistema Integrado de Mejora · TPM</p>
+</header>
+
+<div class="layout">
+
+  <div class="controls">
+    <div class="ctrl-label">Dimensiones</div>
+
+    <div class="ctrl-item">
+      <div>
+        <div class="ctrl-name">Nivel de Madurez</div>
+        <div class="ctrl-sub">Eje X · Ancho</div>
+      </div>
+      <div class="ctrl-spinner">
+        <button class="btn-spin" onclick="change('x',-1)">−</button>
+        <span class="ctrl-val vx" id="vx">4</span>
+        <button class="btn-spin" onclick="change('x',+1)">+</button>
+      </div>
+    </div>
+
+    <div class="ctrl-item">
+      <div>
+        <div class="ctrl-name">Resultados</div>
+        <div class="ctrl-sub">Eje Y · Alto</div>
+      </div>
+      <div class="ctrl-spinner">
+        <button class="btn-spin" onclick="change('y',-1)">−</button>
+        <span class="ctrl-val vy" id="vy">4</span>
+        <button class="btn-spin" onclick="change('y',+1)">+</button>
+      </div>
+    </div>
+
+    <div class="ctrl-item">
+      <div>
+        <div class="ctrl-name">Trans. Cultural</div>
+        <div class="ctrl-sub">Eje Z · Profundidad</div>
+      </div>
+      <div class="ctrl-spinner">
+        <button class="btn-spin" onclick="change('z',-1)">−</button>
+        <span class="ctrl-val vz" id="vz">3</span>
+        <button class="btn-spin" onclick="change('z',+1)">+</button>
+      </div>
+    </div>
+
+    <div class="nivel-box">
+      <div class="ctrl-label" style="margin-bottom:6px">Nivel calculado</div>
+      <div class="nivel-num" id="nivelNum">3.7</div>
+      <div><span class="nivel-tag" id="nivelTag">Definido</span></div>
+      <div class="nivel-desc" id="nivelDesc">Procesos estandarizados. OEE &gt; 75%.</div>
+    </div>
+
+    <div class="axis-legend">
+      <div class="ax-row">
+        <div class="ax-dot" style="background:var(--accent-x)"></div>
+        <span>X · Madurez — diagonal ↙</span>
+      </div>
+      <div class="ax-row">
+        <div class="ax-dot" style="background:var(--accent-y)"></div>
+        <span>Y · Resultados — vertical ↑</span>
+      </div>
+      <div class="ax-row">
+        <div class="ax-dot" style="background:var(--accent-z)"></div>
+        <span>Z · Cultural — horizontal →</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <canvas id="c" width="600" height="500"></canvas>
+  </div>
+
+</div>
+
+<script>
+const state = { x:4, y:4, z:3 };
+const MIN=1, MAX=5;
+
+const NIVELES = [
+  { max:2,   tag:"Inicial",       desc:"Operación reactiva. Sin estándares formales.", color:"#1a1a18" },
+  { max:3,   tag:"En Desarrollo", desc:"Primeros pilares TPM implementados.",          color:"#1a1a18" },
+  { max:4,   tag:"Definido",      desc:"Procesos estandarizados. OEE > 75%.",         color:"#2563eb" },
+  { max:4.5, tag:"Gestionado",    desc:"Indicadores consolidados. OEE > 80%.",        color:"#2563eb" },
+  { max:5,   tag:"Clase Mundial", desc:"Excelencia operacional. OEE > 85%.",          color:"#059669" },
+];
+
+function change(axis, delta) {
+  state[axis] = Math.min(MAX, Math.max(MIN, state[axis] + delta));
+  document.getElementById('v'+axis).textContent = state[axis];
+  updateNivel();
+  render();
+}
+
+function updateNivel() {
+  const avg = (state.x + state.y + state.z) / 3;
+  const n = NIVELES.find(n => avg <= n.max) || NIVELES[NIVELES.length-1];
+  document.getElementById('nivelNum').textContent = avg.toFixed(1);
+  document.getElementById('nivelTag').textContent = n.tag;
+  document.getElementById('nivelTag').style.background = n.color;
+  document.getElementById('nivelDesc').textContent = n.desc;
+}
+
+// Proyección oblicua izquierda
+// x' = -0.35*x + z    y' = y - 0.35*x
+const OX = 290, OY = 340, SC = 65;
+
+function pt(x, y, z) {
+  return {
+    px: OX + (-0.35*x + z) * SC,
+    py: OY + (-y + 0.35*x) * SC
+  };
+}
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const a = state.x, b = state.y, c = state.z;
+
+  // ── Grid cara base (Y=0) ──────────────────────────────────────
+  ctx.strokeStyle = '#ebebea';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i <= 5; i++) {
+    drawLine(pt(i,0,0), pt(i,0,5));
+    drawLine(pt(0,0,i), pt(5,0,i));
+  }
+  // Grid cara frontal (Z=0)
+  for (let i = 0; i <= 5; i++) {
+    drawLine(pt(0,i,0), pt(5,i,0));
+    drawLine(pt(i,0,0), pt(i,5,0));
+  }
+
+  // ── Ejes ─────────────────────────────────────────────────────
+  drawAxis(pt(0,0,0), pt(5.6,0,0), '#2563eb', 'Madurez (X)',   14, 4);
+  drawAxis(pt(0,0,0), pt(0,5.6,0), '#059669', 'Resultados (Y)',-8, -8);
+  drawAxis(pt(0,0,0), pt(0,0,5.6), '#d97706', 'Cultural (Z)',  10, 4);
+
+  // Marcas numéricas
+  for (let i = 1; i <= 5; i++) {
+    drawTick(pt(i,0,0), pt(i,0.15,0), '#2563eb', i, 0, 14);
+    drawTick(pt(0,i,0), pt(0.15,i,0), '#059669', i, -18, 3);
+    drawTick(pt(0,0,i), pt(0,0.15,i), '#d97706', i, 0, 14);
+  }
+
+  // ── Caras semitransparentes ───────────────────────────────────
+  drawFace([pt(0,0,0),pt(a,0,0),pt(a,0,c),pt(0,0,c)], 'rgba(37,99,235,0.04)');
+  drawFace([pt(0,0,0),pt(a,0,0),pt(a,b,0),pt(0,b,0)], 'rgba(5,150,105,0.05)');
+  drawFace([pt(0,0,0),pt(0,0,c),pt(0,b,c),pt(0,b,0)], 'rgba(217,119,6,0.05)');
+  drawFace([pt(0,b,0),pt(a,b,0),pt(a,b,c),pt(0,b,c)], 'rgba(37,99,235,0.08)');
+  drawFace([pt(0,0,c),pt(a,0,c),pt(a,b,c),pt(0,b,c)], 'rgba(0,0,0,0.03)');
+  drawFace([pt(a,0,0),pt(a,0,c),pt(a,b,c),pt(a,b,0)], 'rgba(0,0,0,0.03)');
+
+  // ── Aristas del cubo ─────────────────────────────────────────
+  ctx.strokeStyle = '#1a1a18';
+  ctx.lineWidth = 1.8;
+  // base
+  drawLine(pt(0,0,0),pt(a,0,0)); drawLine(pt(a,0,0),pt(a,0,c));
+  drawLine(pt(a,0,c),pt(0,0,c)); drawLine(pt(0,0,c),pt(0,0,0));
+  // techo
+  drawLine(pt(0,b,0),pt(a,b,0)); drawLine(pt(a,b,0),pt(a,b,c));
+  drawLine(pt(a,b,c),pt(0,b,c)); drawLine(pt(0,b,c),pt(0,b,0));
+  // verticales
+  drawLine(pt(0,0,0),pt(0,b,0)); drawLine(pt(a,0,0),pt(a,b,0));
+  drawLine(pt(a,0,c),pt(a,b,c)); drawLine(pt(0,0,c),pt(0,b,c));
+
+  // ── Punto origen ─────────────────────────────────────────────
+  const orig = pt(0,0,0);
+  ctx.beginPath();
+  ctx.arc(orig.px, orig.py, 4, 0, Math.PI*2);
+  ctx.fillStyle = '#1a1a18';
+  ctx.fill();
+
+  // ── Punto destino (vértice superior) ─────────────────────────
+  const avg = (a+b+c)/3;
+  const dest = pt(a,b,c);
+  const dotR = 5 + avg;
+  const dotCol = avg >= 4.5 ? '#059669' : avg >= 4 ? '#2563eb' : '#1a1a18';
+
+  if (avg >= 4.5) {
+    ctx.beginPath();
+    ctx.arc(dest.px, dest.py, dotR+6, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(5,150,105,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.arc(dest.px, dest.py, dotR, 0, Math.PI*2);
+  ctx.fillStyle = dotCol;
+  ctx.fill();
+
+  if (avg >= 4.5) {
+    ctx.fillStyle = '#059669';
+    ctx.font = '600 10px "DM Sans",sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('★ Clase Mundial', dest.px + dotR + 6, dest.py - 4);
+  }
+
+  // Etiqueta origen
+  ctx.fillStyle = '#8a8a84';
+  ctx.font = '400 9px "DM Sans",sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('Inicio (1,1,1)', orig.px - 6, orig.py + 4);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function drawLine(a, b) {
+  ctx.beginPath();
+  ctx.moveTo(a.px, a.py);
+  ctx.lineTo(b.px, b.py);
+  ctx.stroke();
+}
+
+function drawFace(pts, fill) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0].px, pts[0].py);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i].px, pts[i].py);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+function drawAxis(from, to, color, label, dx, dy) {
+  ctx.beginPath();
+  ctx.moveTo(from.px, from.py);
+  ctx.lineTo(to.px, to.py);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  const ang = Math.atan2(to.py-from.py, to.px-from.px);
+  ctx.beginPath();
+  ctx.moveTo(to.px, to.py);
+  ctx.lineTo(to.px - 9*Math.cos(ang-0.38), to.py - 9*Math.sin(ang-0.38));
+  ctx.lineTo(to.px - 9*Math.cos(ang+0.38), to.py - 9*Math.sin(ang+0.38));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.font = '500 10px "DM Sans",sans-serif';
+  ctx.textAlign = dx > 0 ? 'left' : 'right';
+  ctx.fillText(label, to.px + dx, to.py + dy);
+}
+
+function drawTick(base, tip, color, num, dx, dy) {
+  ctx.beginPath();
+  ctx.moveTo(base.px, base.py);
+  ctx.lineTo(tip.px, tip.py);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#aaa';
+  ctx.font = '400 9px "DM Sans",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(num, base.px + dx, base.py + dy);
+}
+
+updateNivel();
+render();
+</script>
+</body>
+</html>
